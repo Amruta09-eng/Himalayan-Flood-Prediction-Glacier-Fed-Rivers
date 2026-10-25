@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HimAlert AI | Himalayan Glacial Flood Early Warning System</title>
+  <meta name="description" content="AI-driven early warning and predictive analytics for Himalayan glacial lake outburst floods (GLOF) and riverine surges using Open-Meteo GloFAS and ERA5 cryospheric reanalysis.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body data-theme="light">
+  <!-- Top Global Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-cluster">
+        <div class="logo-icon">
+          <i class="fa-solid fa-mountain-sun"></i>
+        </div>
+        <div class="brand-text">
+          <h1>HimAlert <span class="accent-text">AI</span></h1>
+          <p class="subtitle">Himalayan Cryosphere & Glacial Flood Early Warning</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <!-- Live Station Selector -->
+      <div class="station-selector-box">
+        <label for="stationSelect"><i class="fa-solid fa-location-crosshairs"></i> Basin Station:</label>
+        <select id="stationSelect" class="styled-select">
+          <option value="imja" selected>Imja Glacial Lake & Dudh Koshi (Nepal / Everest)</option>
+          <option value="kedarnath">Kedarnath / Mandakini (Uttarakhand, India)</option>
+          <option value="chamoli">Chamoli / Rishiganga (Uttarakhand, India)</option>
+          <option value="lhonak">South Lhonak Lake (Teesta Basin, Sikkim)</option>
+          <option value="sutlej">Kinnaur / Upper Sutlej (Himachal Pradesh)</option>
+          <option value="kosi">Kosi River (Indo-Nepal Border)</option>
+        </select>
+        <button id="btnCustomCoords" class="btn-ghost" title="Input custom GPS coordinates">
+          <i class="fa-solid fa-map-pin"></i> Custom GPS
+        </button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Visual Theme Switcher -->
+      <div class="theme-switcher-box" title="Switch Theme Palette">
+        <i class="fa-solid fa-palette theme-icon"></i>
+        <select id="themeSelect" class="styled-select theme-select" aria-label="Theme Selection">
+          <option value="light" selected>☀️ Clean Pure White</option>
+          <option value="cyan">🌊 Glacial Cyan</option>
+          <option value="emerald">🌲 Alpine Emerald</option>
+          <option value="indigo">🌌 Deep Indigo</option>
+        </select>
+      </div>
+
+      <div class="system-health-pill">
+        <span class="pulse-dot"></span>
+        <span class="health-label">API Connected: GloFAS & ERA5</span>
+      </div>
+      <button id="btnForceRefresh" class="btn-primary-action" title="Fetch latest live data from Open-Meteo">
+        <i class="fa-solid fa-arrows-rotate"></i> <span>Live Sync</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <button class="nav-tab active" data-tab="tab-telemetry">
+        <i class="fa-solid fa-chart-line"></i> <span>Telemetry & Forecast Hub</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-simulator">
+        <i class="fa-solid fa-sliders"></i> <span>"What-If" Climate Simulator</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-backtest">
+        <i class="fa-solid fa-clock-rotate-left"></i> <span>Disaster Backtesting (Forensics)</span>
+      </button>
+      <button class="nav-tab" data-tab="tab-report">
+        <i class="fa-solid fa-book-journal-whills"></i> <span>Scientific Report & Limitations</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Body -->
+  <main class="content-container">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: TELEMETRY & FORECAST HUB            -->
+    <!-- ========================================== -->
+    <section id="tab-telemetry" class="tab-pane active">
+      <!-- Station Overview Bar -->
+      <div class="station-meta-bar">
+        <div class="meta-item">
+          <span class="meta-label">Selected Basin</span>
+          <span id="basinName" class="meta-val highlight">Imja Glacial Lake</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Coordinates</span>
+          <span id="basinCoords" class="meta-val">27.90° N, 86.92° E</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Primary Hazard Mechanism</span>
+          <span id="basinHazard" class="meta-val">Moraine-Dammed Glacial Lake Outburst (GLOF)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Monitoring Date</span>
+          <span id="basinDate" class="meta-val">Latest Reanalysis</span>
+        </div>
+      </div>
+
+      <!-- Top Metric Cards Grid -->
+      <div class="metrics-kpi-grid">
+        <!-- Current River Flow -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>Today's Flow ($Q_t$)</span>
+            <i class="fa-solid fa-water kpi-icon"></i>
+          </div>
+          <div class="kpi-body">
+            <span id="kpiCurrentQ" class="kpi-number">--</span>
+            <span class="kpi-unit">m³/s</span>
+          </div>
+          <div class="kpi-footer">
+            <span class="kpi-subtext">GloFAS v4 Hydraulic Routing</span>
+          </div>
+        </div>
+
+        <!-- Tomorrow's Predicted Discharge -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>Predicted Flow ($Q_{t+1}$)</span>
+            <i class="fa-solid fa-arrow-trend-up kpi-icon"></i>
+          </div>
+          <div class="kpi-body">
+            <span id="kpiPredQ" class="kpi-number highlight-cyan">--</span>
+            <span class="kpi-unit">m³/s</span>
+          </div>
+          <div class="kpi-footer">
+            <span id="kpiQDelta" class="kpi-badge">Inertia Baseline</span>
+          </div>
+        </div>
+
+        <!-- Multi-Tier Early Warning Alert -->
+        <div class="kpi-card kpi-alert-card" id="kpiAlertCard">
+          <div class="kpi-header">
+            <span>24h Early Warning</span>
+            <i class="fa-solid fa-triangle-exclamation kpi-icon" id="kpiAlertIcon"></i>
+          </div>
+          <div class="kpi-body">
+            <span id="kpiAlertBadge" class="alert-status-badge">CALCULATING...</span>
+          </div>
+          <div class="kpi-footer">
+            <span id="kpiAlertDesc" class="kpi-alert-caption">Evaluation in progress</span>
+          </div>
+        </div>
+
+        <!-- Flood Exceedance Probability -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>Exceedance Probability</span>
+            <i class="fa-solid fa-bullseye kpi-icon"></i>
+          </div>
+          <div class="kpi-body">
+            <span id="kpiProb" class="kpi-number">--</span>
+            <span class="kpi-unit">%</span>
+          </div>
+          <div class="kpi-footer">
+            <span class="kpi-subtext">RF Ensemble Classifier</span>
+          </div>
+        </div>
+
+        <!-- Cryospheric Thermal Melt Index -->
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span>Degree-Day Melt Energy</span>
+            <i class="fa-solid fa-temperature-arrow-up kpi-icon"></i>
+          </div>
+          <div class="kpi-body">
+            <span id="kpiMelt" class="kpi-number">--</span>
+            <span class="kpi-unit">°C·d</span>
+          </div>
+          <div class="kpi-footer">
+            <span id="kpiTempSubtitle" class="kpi-subtext">Mean Temp: -- °C</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- UNIQUE SECTION 1: ANIMATED RISK SPEEDOMETER  -->
+      <!-- + CRYOSPHERE VITALS ROW                      -->
+      <!-- ============================================ -->
+      <div class="vitals-row">
+
+        <!-- Animated Flood Risk Speedometer Gauge -->
+        <div class="glass-card gauge-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-gauge-high text-amber"></i>
+              <span>Flood Risk Probability Gauge</span>
+            </div>
+            <span class="card-chip chip-amber" id="gaugeAlertChip">LIVE</span>
+          </div>
+          <div class="card-body gauge-body">
+            <div class="gauge-wrapper">
+              <svg id="riskGaugeSvg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background arc zones -->
+                <defs>
+                  <linearGradient id="gaugeGradSafe" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#10B981"/>
+                    <stop offset="100%" style="stop-color:#34D399"/>
+                  </linearGradient>
+                  <filter id="gaugeGlow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+
+                <!-- Outer ring background -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="18" stroke-linecap="round"/>
+
+                <!-- Zone: SAFE (0–30%) green -->
+                <path id="gaugeZoneSafe"   d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="transparent" stroke-width="18" stroke-linecap="round"/>
+                <!-- Zone arcs drawn via JS -->
+                <path d="M 20 100 A 80 80 0 0 1 68 30"   fill="none" stroke="#10B981" stroke-width="16" stroke-linecap="round" opacity="0.35"/>
+                <path d="M 68 30 A 80 80 0 0 1 124 22"   fill="none" stroke="#F59E0B" stroke-width="16" stroke-linecap="round" opacity="0.35"/>
+                <path d="M 124 22 A 80 80 0 0 1 164 46"  fill="none" stroke="#F97316" stroke-width="16" stroke-linecap="round" opacity="0.35"/>
+                <path d="M 164 46 A 80 80 0 0 1 180 100" fill="none" stroke="#EF4444" stroke-width="16" stroke-linecap="round" opacity="0.35"/>
+
+                <!-- Active fill arc (animated) -->
+                <path id="gaugeActiveFill" d="M 20 100 A 80 80 0 0 1 20 100" fill="none" stroke="#10B981" stroke-width="16" stroke-linecap="round" filter="url(#gaugeGlow)" opacity="0.95"/>
+
+                <!-- Tick marks -->
+                <line x1="20"  y1="100" x2="26"  y2="100" stroke="rgba(148,163,184,0.6)" stroke-width="1.5"/>
+                <line x1="44"  y1="46"  x2="47"  y2="49"  stroke="rgba(148,163,184,0.6)" stroke-width="1.5"/>
+                <line x1="100" y1="20"  x2="100" y2="26"  stroke="rgba(148,163,184,0.6)" stroke-width="1.5"/>
+                <line x1="156" y1="46"  x2="153" y2="49"  stroke="rgba(148,163,184,0.6)" stroke-width="1.5"/>
+                <line x1="180" y1="100" x2="174" y2="100" stroke="rgba(148,163,184,0.6)" stroke-width="1.5"/>
+
+                <!-- Zone labels -->
+                <text x="14"  y="115" font-size="7" fill="rgba(148,163,184,0.8)" text-anchor="middle" font-family="Inter,sans-serif">0%</text>
+                <text x="44"  y="43"  font-size="7" fill="rgba(148,163,184,0.8)" text-anchor="middle" font-family="Inter,sans-serif">30%</text>
+                <text x="100" y="16"  font-size="7" fill="rgba(148,163,184,0.8)" text-anchor="middle" font-family="Inter,sans-serif">50%</text>
+                <text x="158" y="43"  font-size="7" fill="rgba(148,163,184,0.8)" text-anchor="middle" font-family="Inter,sans-serif">75%</text>
+                <text x="188" y="115" font-size="7" fill="rgba(148,163,184,0.8)" text-anchor="middle" font-family="Inter,sans-serif">100%</text>
+
+                <!-- Needle pivot -->
+                <circle cx="100" cy="100" r="6" fill="var(--bg-elevated)" stroke="rgba(148,163,184,0.6)" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="3" fill="var(--accent-cyan)"/>
+
+                <!-- Animated Needle -->
+                <line id="gaugeNeedle" x1="100" y1="100" x2="20" y2="100"
+                      stroke="var(--accent-cyan)" stroke-width="2.5" stroke-linecap="round"
+                      style="transform-origin: 100px 100px; transform: rotate(0deg); transition: transform 1.2s cubic-bezier(0.34,1.56,0.64,1)"/>
+
+                <!-- Center display -->
+                <text id="gaugeValueText" x="100" y="88" font-size="18" font-weight="800" fill="var(--text-main)" text-anchor="middle" font-family="'Outfit',sans-serif">--%</text>
+                <text id="gaugeLabelText" x="100" y="99" font-size="7"  font-weight="600" fill="rgba(148,163,184,0.8)" text-anchor="middle" font-family="Inter,sans-serif" letter-spacing="0.5">FLOOD PROBABILITY</text>
+              </svg>
+
+              <!-- Zone Legend -->
+              <div class="gauge-legend">
+                <span class="gauge-legend-item"><span class="glz safe"></span>Safe</span>
+                <span class="gauge-legend-item"><span class="glz watch"></span>Watch</span>
+                <span class="gauge-legend-item"><span class="glz warn"></span>Warning</span>
+                <span class="gauge-legend-item"><span class="glz crit"></span>Critical</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cryosphere Vitals Bars -->
+        <div class="glass-card vitals-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-heart-pulse text-red"></i>
+              <span>Cryosphere Vitals Monitor</span>
+            </div>
+            <span class="card-chip">Live Conditions</span>
+          </div>
+          <div class="card-body vitals-body">
+            <div class="vital-row">
+              <div class="vital-label"><i class="fa-solid fa-water"></i> River Discharge</div>
+              <div class="vital-bar-wrap"><div id="vitalBarQ"    class="vital-bar vb-cyan"  style="width:0%"></div></div>
+              <div class="vital-val" id="vitalValQ">--</div>
+            </div>
+            <div class="vital-row">
+              <div class="vital-label"><i class="fa-solid fa-temperature-half"></i> Temperature</div>
+              <div class="vital-bar-wrap"><div id="vitalBarT"    class="vital-bar vb-red"   style="width:0%"></div></div>
+              <div class="vital-val" id="vitalValT">--</div>
+            </div>
+            <div class="vital-row">
+              <div class="vital-label"><i class="fa-solid fa-cloud-rain"></i> Precipitation</div>
+              <div class="vital-bar-wrap"><div id="vitalBarP"    class="vital-bar vb-indigo" style="width:0%"></div></div>
+              <div class="vital-val" id="vitalValP">--</div>
+            </div>
+            <div class="vital-row">
+              <div class="vital-label"><i class="fa-solid fa-snowflake"></i> Glacier Melt</div>
+              <div class="vital-bar-wrap"><div id="vitalBarM"    class="vital-bar vb-amber" style="width:0%"></div></div>
+              <div class="vital-val" id="vitalValM">--</div>
+            </div>
+            <div class="vital-row">
+              <div class="vital-label"><i class="fa-solid fa-triangle-exclamation"></i> Flood Risk</div>
+              <div class="vital-bar-wrap"><div id="vitalBarRisk" class="vital-bar vb-red"   style="width:0%"></div></div>
+              <div class="vital-val" id="vitalValRisk">--</div>
+            </div>
+
+            <div class="vitals-footer-note" id="vitalsStationNote">
+              <i class="fa-solid fa-location-dot"></i> Loading station...
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Flood Peak Season Card -->
+        <div class="glass-card season-risk-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-calendar-week text-amber"></i>
+              <span>Monthly Flood Risk Profile</span>
+            </div>
+            <span class="card-chip">Historical Pattern</span>
+          </div>
+          <div class="card-body season-body">
+            <div class="month-bars" id="monthRiskBars">
+              <!-- Filled by JS -->
+            </div>
+            <div class="season-labels">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span>
+              <span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+              <span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+            </div>
+            <div class="season-note">
+              <span class="dot-peak"></span> Peak Monsoon Flood Season
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- UNIQUE SECTION 2: FLOOD RISK CALENDAR        -->
+      <!-- ============================================ -->
+      <div class="glass-card calendar-heatmap-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-calendar-days text-indigo"></i>
+            <span>Flood Risk Calendar Heatmap — Daily Historical Risk Score</span>
+          </div>
+          <div class="calendar-legend-row">
+            <span class="cal-legend-label">Low Risk</span>
+            <span class="cal-swatch cal-s0"></span>
+            <span class="cal-swatch cal-s1"></span>
+            <span class="cal-swatch cal-s2"></span>
+            <span class="cal-swatch cal-s3"></span>
+            <span class="cal-swatch cal-s4"></span>
+            <span class="cal-legend-label">High Risk</span>
+          </div>
+        </div>
+        <div class="card-body calendar-body">
+          <div id="floodCalendarHeatmap" class="calendar-heatmap-grid">
+            <div class="cal-loading">
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Loading historical risk data...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split View: Interactive Map & Time-Series Chart -->
+      <div class="dashboard-split-grid">
+
+        <!-- Interactive Leaflet Map Card -->
+        <div class="glass-card map-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-earth-americas"></i>
+              <span>Global Cryosphere GIS: Rivers & Glaciers Explorer</span>
+            </div>
+            <div class="map-view-actions">
+              <button id="btnZoomWorld" class="btn-map-control" title="Zoom out to Full World View">
+                <i class="fa-solid fa-globe"></i> World View
+              </button>
+              <button id="btnZoomHimalayas" class="btn-map-control active" title="Focus on Third Pole / Himalayas">
+                <i class="fa-solid fa-mountain"></i> Himalayas
+              </button>
+            </div>
+          </div>
+          <div class="card-body map-wrapper">
+            <div id="himalayanMap"></div>
+
+            <!-- Floating Layer Controls -->
+            <div class="map-layer-toggles">
+              <label class="layer-toggle-chip" title="Toggle Highlighted Rivers">
+                <input type="checkbox" id="chkToggleRivers" checked>
+                <span>🌊 Highlight Rivers</span>
+              </label>
+              <label class="layer-toggle-chip" title="Toggle Highlighted Glaciers & Proglacial Lakes">
+                <input type="checkbox" id="chkToggleGlaciers" checked>
+                <span>❄️ Highlight Glaciers</span>
+              </label>
+              <label class="layer-toggle-chip" title="Toggle Telemetry Stations">
+                <input type="checkbox" id="chkToggleStations" checked>
+                <span>📍 Stations</span>
+              </label>
+              <label class="layer-toggle-chip" title="Toggle Downstream Inundation Zones">
+                <input type="checkbox" id="chkToggleDownstream" checked>
+                <span>⚠️ Downstream Impact Zones</span>
+              </label>
+            </div>
+
+            <!-- Enhanced Map Legend -->
+            <div class="map-legend">
+              <span class="legend-item"><span class="legend-line line-river"></span> Highlighted River</span>
+              <span class="legend-item"><span class="dot dot-glacier"></span> Glacier / Tarn</span>
+              <span class="legend-item"><span class="dot dot-glof"></span> GLOF Station</span>
+              <span class="legend-item"><span class="dot dot-cloudburst"></span> Cloudburst Station</span>
+              <span class="legend-item"><span class="dot dot-impact-critical"></span> Critical Flood Zone</span>
+              <span class="legend-item"><span class="dot dot-impact-high"></span> Warning Impact Zone</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model Performance & Benchmark Comparison Card -->
+        <div class="glass-card benchmark-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-scale-balanced"></i>
+              <span>Model Rigor vs Persistence Baseline</span>
+            </div>
+            <span class="card-chip chip-success" id="chipImprovement">Beat Baseline</span>
+          </div>
+          <div class="card-body">
+            <table class="benchmark-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>MAE (m³/s)</th>
+                  <th>RMSE (m³/s)</th>
+                  <th>R² Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="baseline-row">
+                  <td><span class="model-tag baseline">Persistence</span> $Q_{t+1} = Q_t$</td>
+                  <td id="baseMAE">--</td>
+                  <td id="baseRMSE">--</td>
+                  <td id="baseR2">--</td>
+                </tr>
+                <tr class="rf-row active-model">
+                  <td><span class="model-tag rf">Random Forest</span> (Hydrometeo)</td>
+                  <td id="rfMAE" class="val-bold">--</td>
+                  <td id="rfRMSE" class="val-bold">--</td>
+                  <td id="rfR2" class="val-bold">--</td>
+                </tr>
+                <tr class="gb-row">
+                  <td><span class="model-tag gb">Gradient Boosting</span></td>
+                  <td id="gbMAE">--</td>
+                  <td id="gbRMSE">--</td>
+                  <td id="gbR2">--</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="classification-strip">
+              <div class="cls-metric-box">
+                <span class="cls-lbl">Precision</span>
+                <span id="clsPrecision" class="cls-val">--</span>
+              </div>
+              <div class="cls-metric-box">
+                <span class="cls-lbl">Recall (Catch Rate)</span>
+                <span id="clsRecall" class="cls-val highlight-green">--</span>
+              </div>
+              <div class="cls-metric-box">
+                <span class="cls-lbl">F1-Score</span>
+                <span id="clsF1" class="cls-val">--</span>
+              </div>
+              <div class="cls-metric-box">
+                <span class="cls-lbl">False Alarm Ratio (FAR)</span>
+                <span id="clsFAR" class="cls-val highlight-amber">--</span>
+              </div>
+            </div>
+
+            <!-- Confusion Matrix Preview -->
+            <div class="cm-compact-row">
+              <div class="cm-cell cm-tp"><span>TP (Caught):</span> <strong id="cmTP">--</strong></div>
+              <div class="cm-cell cm-fp"><span>FP (False Alert):</span> <strong id="cmFP">--</strong></div>
+              <div class="cm-cell cm-fn"><span>FN (Missed):</span> <strong id="cmFN">--</strong></div>
+              <div class="cm-cell cm-tn"><span>TN (Normal):</span> <strong id="cmTN">--</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- UNIQUE SECTION 3: DOWNSTREAM GLACIER MELT FLOOD IMPACT ALERT   -->
+      <!-- & AFFECTED AREAS EARLY WARNING (डाउनस्ट्रीम बाढ़ प्रभाव क्षेत्र) -->
+      <!-- ============================================================== -->
+      <div class="glass-card downstream-alert-card" id="downstreamImpactSection">
+        <div class="card-header alert-banner-header">
+          <div class="card-title">
+            <i class="fa-solid fa-water-ladder text-red"></i>
+            <div>
+              <span class="impact-main-title">Glacier Melt Downstream Flood Cascade & Affected Areas Warning</span>
+              <div class="impact-sub-title">ग्लेशियर पिघलने पर डाउनस्ट्रीम बाढ़ प्रभाव क्षेत्र, जल आगमन समय (ETA) व आपातकालीन सुरक्षा प्रोटोकॉल</div>
+            </div>
+          </div>
+          <div class="impact-header-actions">
+            <span class="card-chip chip-red" id="downstreamAlertBadge">
+              <i class="fa-solid fa-triangle-exclamation"></i> HIGH CASCADE ALERT
+            </span>
+          </div>
+        </div>
+
+        <div class="card-body downstream-body">
+          <!-- Live Glacier Melt Telemetry & Wave Dynamics Bar -->
+          <div class="impact-telemetry-row">
+            <div class="telemetry-pill">
+              <i class="fa-solid fa-mountain-sun text-cyan"></i>
+              <div>
+                <span class="tel-label">Source Glacial Basin</span>
+                <strong class="tel-val" id="telBasinName">Chorabari / Mandakini</strong>
+              </div>
+            </div>
+            <div class="telemetry-pill">
+              <i class="fa-solid fa-gauge-high text-amber"></i>
+              <div>
+                <span class="tel-label">Est. Wave Surge Velocity</span>
+                <strong class="tel-val" id="telWaveSpeed">24 km/h (Torrent)</strong>
+              </div>
+            </div>
+            <div class="telemetry-pill">
+              <i class="fa-solid fa-hourglass-start text-red"></i>
+              <div>
+                <span class="tel-label">First Settlement Impact ETA</span>
+                <strong class="tel-val highlight-red" id="telFirstEta">~18 min (Rambara)</strong>
+              </div>
+            </div>
+            <div class="telemetry-pill">
+              <i class="fa-solid fa-people-roof text-indigo"></i>
+              <div>
+                <span class="tel-label">Total Downstream Population at Risk</span>
+                <strong class="tel-val" id="telPopRisk">~195,000+ vulnerable</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Glacier Melt Surge Multiplier Simulator -->
+          <div class="melt-simulator-bar">
+            <div class="melt-sim-info">
+              <i class="fa-solid fa-temperature-arrow-up text-red"></i>
+              <span><strong>Interactive Glacier Melt Surge Simulator:</strong> Adjust thermal ablation / outburst scale to simulate downstream flood wave propagation</span>
+            </div>
+            <div class="melt-sim-controls">
+              <button class="btn-melt-preset active" data-mult="1.0" id="btnMeltPreset1">Normal Flow (1.0x)</button>
+              <button class="btn-melt-preset" data-mult="1.8" id="btnMeltPreset2">Heatwave (+3°C / 1.8x)</button>
+              <button class="btn-melt-preset" data-mult="3.2" id="btnMeltPreset3">Outburst Surge (3.2x)</button>
+              <div class="slider-wrapper melt-slider-wrap">
+                <input type="range" id="sliderMeltFactor" min="1.0" max="4.0" step="0.2" value="1.0">
+                <span class="melt-factor-val" id="valMeltFactor">1.0x Surge</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Downstream Towns & Settlements Table -->
+          <div class="table-responsive impact-table-wrap">
+            <table class="impact-table">
+              <thead>
+                <tr>
+                  <th>Settlement / Infrastructure</th>
+                  <th>Distance Downstream</th>
+                  <th>Flood Arrival ETA</th>
+                  <th>Inundation Risk</th>
+                  <th>Vulnerable Assets & Population</th>
+                  <th>Disaster Emergency Protocol</th>
+                  <th>Map Action</th>
+                </tr>
+              </thead>
+              <tbody id="downstreamTownsTbody">
+                <!-- Dynamically rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Time-Series Hydrograph & Weather Chart -->
+      <div class="glass-card chart-card">
+        <div class="card-header chart-header-row">
+          <div class="card-title">
+            <i class="fa-solid fa-chart-area"></i>
+            <span>Test Period Hydrograph: Actual vs Predicted Discharge & Rainfall Overlay</span>
+          </div>
+          <div class="chart-controls">
+            <span class="threshold-pill">Flood Threshold (90th Pct): <strong id="lblThresholdVal">-- m³/s</strong></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="hydrographChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Split: Cryospheric Feature Importance & Training Specs -->
+      <div class="dashboard-split-grid bottom-grid">
+        <!-- Feature Importance Chart Card -->
+        <div class="glass-card feature-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-brain"></i>
+              <span>Cryospheric Feature Importance (RF Regressor)</span>
+            </div>
+            <span class="card-chip">Permutation Weight</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container-sm">
+              <canvas id="featureImpChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strict Time-Series Split Rules Card -->
+        <div class="glass-card guide-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Hydrological Rigor & Anti-Leakage Protocol</span>
+            </div>
+          </div>
+          <div class="card-body info-text-body">
+            <div class="protocol-item">
+              <i class="fa-solid fa-calendar-xmark icon-rule"></i>
+              <div>
+                <strong>Zero Time-Series Shuffling:</strong>
+                <p>Never randomly shuffle time-series data. Training strictly occurs on earlier years, while testing evaluates strictly forward in time.</p>
+              </div>
+            </div>
+            <div class="protocol-item">
+              <i class="fa-solid fa-filter icon-rule"></i>
+              <div>
+                <strong>Uncontaminated Thresholds:</strong>
+                <p>The 90th percentile flood threshold is derived solely from the training distribution, preventing future flood stage leakage.</p>
+              </div>
+            </div>
+            <div class="protocol-item">
+              <i class="fa-solid fa-snowplow icon-rule"></i>
+              <div>
+                <strong>Degree-Day Thermal Forcing:</strong>
+                <p>Incorporates positive degree-day ablation equations ($\max(0, T)$) to capture glacier melt without requiring expensive physical ice models.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- LIVE FLOOD PREDICTION PANEL                  -->
+      <!-- ============================================ -->
+      <div class="glass-card predict-panel-card" id="livePredictPanel">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-bolt-lightning text-amber"></i>
+            <span>Live Field Prediction — Enter Sensor Readings</span>
+          </div>
+          <div class="predict-header-right">
+            <span class="card-chip chip-amber">🤖 Real-Time ML Inference</span>
+            <button id="btnAutofillToday" class="btn-ghost btn-sm" title="Auto-fill with latest station data">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Latest
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body predict-body">
+          <!-- Two-column input grid -->
+          <div class="predict-inputs-grid">
+
+            <!-- Column 1: Discharge / River Flow -->
+            <div class="predict-input-section">
+              <div class="predict-section-title">
+                <i class="fa-solid fa-water text-cyan"></i> River Discharge (m³/s)
+              </div>
+              <div class="predict-fields-row">
+                <div class="predict-field">
+                  <label for="pi_discharge">Today (Q<sub>t</sub>)</label>
+                  <input type="number" id="pi_discharge" class="predict-input" step="0.01" min="0" value="0.45" placeholder="e.g. 0.45">
+                  <span class="predict-unit">m³/s</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_q_lag1">Yesterday (Q<sub>t-1</sub>)</label>
+                  <input type="number" id="pi_q_lag1" class="predict-input" step="0.01" min="0" value="0.40" placeholder="e.g. 0.40">
+                  <span class="predict-unit">m³/s</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_q_lag2">2 Days Ago (Q<sub>t-2</sub>)</label>
+                  <input type="number" id="pi_q_lag2" class="predict-input" step="0.01" min="0" value="0.38" placeholder="e.g. 0.38">
+                  <span class="predict-unit">m³/s</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_q_lag3">3 Days Ago (Q<sub>t-3</sub>)</label>
+                  <input type="number" id="pi_q_lag3" class="predict-input" step="0.01" min="0" value="0.35" placeholder="e.g. 0.35">
+                  <span class="predict-unit">m³/s</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 2: Temperature -->
+            <div class="predict-input-section">
+              <div class="predict-section-title">
+                <i class="fa-solid fa-temperature-half text-red"></i> Temperature (°C)
+              </div>
+              <div class="predict-fields-row">
+                <div class="predict-field">
+                  <label for="pi_temp_mean">Today (Mean)</label>
+                  <input type="number" id="pi_temp_mean" class="predict-input" step="0.1" value="8.5" placeholder="e.g. 8.5">
+                  <span class="predict-unit">°C</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_temp_3d">3-Day Average</label>
+                  <input type="number" id="pi_temp_3d" class="predict-input" step="0.1" value="7.8" placeholder="e.g. 7.8">
+                  <span class="predict-unit">°C</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_temp_warming_anomaly">Warming Anomaly</label>
+                  <input type="number" id="pi_temp_warming_anomaly" class="predict-input" step="0.1" value="2.1" placeholder="e.g. 2.1">
+                  <span class="predict-unit">°C</span>
+                  <span class="predict-hint">vs 30d avg</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_degree_day_melt">Degree-Day Melt</label>
+                  <input type="number" id="pi_degree_day_melt" class="predict-input" step="0.1" min="0" value="8.5" placeholder="e.g. 8.5">
+                  <span class="predict-unit">°C·d</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 3: Precipitation -->
+            <div class="predict-input-section">
+              <div class="predict-section-title">
+                <i class="fa-solid fa-cloud-rain text-indigo"></i> Precipitation (mm)
+              </div>
+              <div class="predict-fields-row">
+                <div class="predict-field">
+                  <label for="pi_precip">Today (Total)</label>
+                  <input type="number" id="pi_precip" class="predict-input" step="0.1" min="0" value="12.5" placeholder="e.g. 12.5">
+                  <span class="predict-unit">mm</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_rain">Today (Rain only)</label>
+                  <input type="number" id="pi_rain" class="predict-input" step="0.1" min="0" value="10.0" placeholder="e.g. 10.0">
+                  <span class="predict-unit">mm</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_precip_3d">3-Day Total</label>
+                  <input type="number" id="pi_precip_3d" class="predict-input" step="0.1" min="0" value="28.0" placeholder="e.g. 28.0">
+                  <span class="predict-unit">mm</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_precip_7d">7-Day Total</label>
+                  <input type="number" id="pi_precip_7d" class="predict-input" step="0.1" min="0" value="55.0" placeholder="e.g. 55.0">
+                  <span class="predict-unit">mm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 4: Derived / Season -->
+            <div class="predict-input-section">
+              <div class="predict-section-title">
+                <i class="fa-solid fa-calendar-days text-green"></i> Seasonal Context
+              </div>
+              <div class="predict-fields-row">
+                <div class="predict-field">
+                  <label for="pi_rain_3d">3-Day Rain</label>
+                  <input type="number" id="pi_rain_3d" class="predict-input" step="0.1" min="0" value="22.0" placeholder="e.g. 22.0">
+                  <span class="predict-unit">mm</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_degree_day_melt_3d">Melt 3d Sum</label>
+                  <input type="number" id="pi_degree_day_melt_3d" class="predict-input" step="0.1" min="0" value="24.0" placeholder="e.g. 24.0">
+                  <span class="predict-unit">°C·d</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_month">Month (1–12)</label>
+                  <input type="number" id="pi_month" class="predict-input" step="1" min="1" max="12" value="8" placeholder="e.g. 8">
+                  <span class="predict-unit">/12</span>
+                </div>
+                <div class="predict-field">
+                  <label for="pi_is_monsoon">Monsoon Season</label>
+                  <select id="pi_is_monsoon" class="predict-select">
+                    <option value="1">Yes (Jun–Sep)</option>
+                    <option value="0">No (Oct–May)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- end predict-inputs-grid -->
+
+          <!-- Predict Button Row -->
+          <div class="predict-action-row">
+            <button id="btnRunLivePredict" class="btn-predict-run">
+              <i class="fa-solid fa-microchip"></i>
+              Run ML Flood Prediction
+            </button>
+            <button id="btnResetPredict" class="btn-ghost" onclick="document.getElementById('predictResultBox').style.display='none'">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+            <span class="predict-note">
+              <i class="fa-solid fa-circle-info"></i>
+              Model uses 17 cryospheric features — auto-fills season harmonics from month
+            </span>
+          </div>
+
+          <!-- Result Display Box -->
+          <div id="predictResultBox" class="predict-result-box" style="display:none;">
+            <div class="predict-result-left">
+              <div class="pred-result-row">
+                <span class="pred-label">Predicted Discharge Tomorrow</span>
+                <span id="predDischarge" class="pred-big-val">--</span>
+                <span class="pred-unit-big">m³/s</span>
+              </div>
+              <div class="pred-result-row">
+                <span class="pred-label">Flood Probability</span>
+                <div class="prob-bar-wrapper">
+                  <div id="probBarFill" class="prob-bar-fill" style="width:0%"></div>
+                </div>
+                <span id="predProb" class="pred-prob-val">0%</span>
+              </div>
+              <div class="pred-result-row">
+                <span class="pred-label">Flood Threshold (trained)</span>
+                <span id="predThreshold" class="pred-threshold-val">--</span>
+                <span class="pred-unit-big">m³/s</span>
+              </div>
+            </div>
+            <div class="predict-result-right">
+              <div id="predAlertBox" class="pred-alert-tier">
+                <i id="predAlertIcon" class="fa-solid fa-circle-check pred-alert-icon"></i>
+                <div>
+                  <div id="predAlertTier" class="pred-alert-name">CALCULATING...</div>
+                  <div id="predAlertDesc" class="pred-alert-desc">Running prediction engine...</div>
+                </div>
+              </div>
+            </div>
+          </div><!-- end result box -->
+
+        </div><!-- end card-body -->
+      </div><!-- end predict-panel-card -->
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: "WHAT-IF" CLIMATE SIMULATOR         -->
+    <!-- ========================================== -->
+    <section id="tab-simulator" class="tab-pane">
+      <div class="simulator-layout">
+        <!-- Left: Interactive Sliders & Controls -->
+        <div class="glass-card simulator-controls-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-volcano"></i>
+              <span>Climate Forcing & Extreme Event Simulator</span>
+            </div>
+            <span class="card-chip chip-amber">Interactive Engine</span>
+          </div>
+          <div class="card-body">
+            <p class="sim-intro">
+              Simulate extreme warming heatwaves (triggering rapid glacier ablation) combined with torrential monsoon cloudbursts to evaluate downstream river response in real time.
+            </p>
+
+            <!-- Slider 1: Temperature Anomaly -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label for="sliderTempAnomaly"><i class="fa-solid fa-temperature-arrow-up text-red"></i> Glacial Heatwave / Temperature Anomaly ($\Delta T$):</label>
+                <span id="valTempAnomaly" class="slider-val">+3.5 °C</span>
+              </div>
+              <input type="range" id="sliderTempAnomaly" min="-5" max="10" step="0.5" value="3.5" class="styled-range">
+              <span class="slider-hint">Simulates high-altitude warming accelerating snow & ice ablation.</span>
+            </div>
+
+            <!-- Slider 2: Cloudburst Rainfall -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label for="sliderCloudburst"><i class="fa-solid fa-cloud-showers-heavy text-cyan"></i> 24h Cloudburst Rainfall Spike:</label>
+                <span id="valCloudburst" class="slider-val">75 mm</span>
+              </div>
+              <input type="range" id="sliderCloudburst" min="0" max="250" step="5" value="75" class="styled-range">
+              <span class="slider-hint">Localized cloudburst intensity over high-relief catchment slopes.</span>
+            </div>
+
+            <!-- Slider 3: Antecedent 3-Day Moisture -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label for="sliderAntecedent"><i class="fa-solid fa-water-ladder text-blue"></i> Antecedent 3-Day Basin Rainfall:</label>
+                <span id="valAntecedent" class="slider-val">30 mm</span>
+              </div>
+              <input type="range" id="sliderAntecedent" min="0" max="150" step="5" value="30" class="styled-range">
+              <span class="slider-hint">Pre-existing soil moisture saturation and tributary stage.</span>
+            </div>
+
+            <!-- Slider 4: Base Discharge -->
+            <div class="slider-group">
+              <div class="slider-header">
+                <label for="sliderBaseQ"><i class="fa-solid fa-gauge text-emerald"></i> Baseline River Flow ($Q_{\text{base}}$):</label>
+                <span id="valBaseQ" class="slider-val">45 m³/s</span>
+              </div>
+              <input type="range" id="sliderBaseQ" min="5" max="200" step="5" value="45" class="styled-range">
+              <span class="slider-hint">Current steady-state river discharge prior to surge.</span>
+            </div>
+
+            <div class="sim-btn-row">
+              <button id="btnResetSim" class="btn-ghost">
+                <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Real-Time Hydrograph Response & Hazard Tier -->
+        <div class="glass-card simulator-results-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa-solid fa-bolt-lightning"></i>
+              <span>Simulated Flood Response & Warning Tier</span>
+            </div>
+            <span id="simAlertBadge" class="alert-status-badge">WARNING</span>
+          </div>
+          <div class="card-body">
+            <!-- Simulated Surge Output Display -->
+            <div class="sim-output-grid">
+              <div class="sim-stat-box">
+                <span class="sim-stat-label">Baseline Flow</span>
+                <span id="simBaseVal" class="sim-stat-number">45.0</span>
+                <span class="sim-stat-unit">m³/s</span>
+              </div>
+              <div class="sim-stat-box surge-box">
+                <span class="sim-stat-label">Simulated Surge Peak</span>
+                <span id="simPeakVal" class="sim-stat-number highlight-red">112.5</span>
+                <span class="sim-stat-unit">m³/s</span>
+              </div>
+              <div class="sim-stat-box">
+                <span class="sim-stat-label">Surge Magnitude</span>
+                <span id="simDeltaVal" class="sim-stat-number highlight-amber">+67.5</span>
+                <span class="sim-stat-unit">m³/s</span>
+              </div>
+              <div class="sim-stat-box">
+                <span class="sim-stat-label">Flow Increase</span>
+                <span id="simPctVal" class="sim-stat-number highlight-cyan">+150%</span>
+                <span class="sim-stat-unit">over normal</span>
+              </div>
+            </div>
+
+            <!-- Runoff Source Partitioning -->
+            <div class="source-partitioning-box">
+              <div class="partition-title">
+                <span>Estimated Flood Source Partitioning</span>
+              </div>
+              <div class="partition-bar">
+                <div id="barRain" class="bar-segment bar-rain" style="width: 58%;" title="Direct Rainfall">58% Rain</div>
+                <div id="barMelt" class="bar-segment bar-melt" style="width: 32%;" title="Glacial Melt">32% Melt</div>
+                <div id="barCoupling" class="bar-segment bar-coupling" style="width: 10%;" title="Rain-on-Snow Coupling">10%</div>
+              </div>
+              <div class="partition-legend">
+                <span><span class="box-dot bg-cyan"></span> Direct Cloudburst Rain</span>
+                <span><span class="box-dot bg-amber"></span> Glacial Ice / Snowpack Ablation</span>
+                <span><span class="box-dot bg-pink"></span> Rain-on-Snow Thermal Erosion</span>
+              </div>
+            </div>
+
+            <!-- Emergency Action Recommendation -->
+            <div class="action-recommendation-card" id="simActionCard">
+              <div class="action-icon">
+                <i class="fa-solid fa-bullhorn"></i>
+              </div>
+              <div class="action-details">
+                <span class="action-title">Protocol Recommendation:</span>
+                <p id="simActionText" class="action-text">High flood probability. Glacial melt & cloudburst runoff exceeding dangerous levels.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: DISASTER BACKTESTING (FORENSICS)    -->
+    <!-- ========================================== -->
+    <section id="tab-backtest" class="tab-pane">
+      <div class="backtest-intro-card glass-card">
+        <div class="backtest-header">
+          <div class="title-wrap">
+            <h2><i class="fa-solid fa-shield-virus"></i> Retrospective Himalayan Disaster Backtesting</h2>
+            <p>
+              Testing the ML early-warning pipeline against verified historical Himalayan catastrophes.
+              An honest machine learning report explains not only what the model caught, but also why it missed specific events.
+            </p>
+          </div>
+          <button id="btnRunBacktests" class="btn-primary-action">
+            <i class="fa-solid fa-play"></i> Run Walk-Forward Backtest
+          </button>
+        </div>
+      </div>
+
+      <!-- Events Grid Cards -->
+      <div class="disasters-grid" id="disastersGrid">
+        <div class="loading-spinner-box">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>Loading historical disaster forensic records...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: SCIENTIFIC REPORT & LIMITATIONS     -->
+    <!-- ========================================== -->
+    <section id="tab-report" class="tab-pane">
+      <div class="report-wrapper glass-card">
+        <div class="report-header">
+          <div class="report-title-group">
+            <span class="report-tag">Academic Research & Engineering Document</span>
+            <h2 id="reportTitle">Predictive Modeling of Himalayan Glacial & Riverine Floods</h2>
+            <p id="reportAuthors" class="report-meta">Himalayan Cryosphere & Disaster Analytics Group • Open-Meteo GloFAS & ERA5 Reanalysis</p>
+          </div>
+          <div class="report-actions">
+            <button id="btnPrintReport" class="btn-ghost" onclick="window.print()">
+              <i class="fa-solid fa-print"></i> Print / PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="report-body" id="reportBody">
+          <div class="loading-spinner-box">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <span>Rendering academic report & limitations analysis...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Custom Coordinates Modal -->
+  <div id="customCoordModal" class="modal-backdrop">
+    <div class="modal-dialog glass-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-location-dot"></i> Enter Custom Himalayan Basin Coordinates</h3>
+        <button id="btnCloseModal" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Query Open-Meteo GloFAS river discharge and ERA5 weather for any custom latitude & longitude in the Himalayas.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="customLat">Latitude (°N):</label>
+            <input type="number" id="customLat" step="0.01" min="25.0" max="36.0" value="28.50" class="styled-input">
+          </div>
+          <div class="form-group">
+            <label for="customLon">Longitude (°E):</label>
+            <input type="number" id="customLon" step="0.01" min="73.0" max="98.0" value="84.00" class="styled-input">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="customStart">Start Year:</label>
+            <input type="date" id="customStart" value="2016-01-01" class="styled-input">
+          </div>
+          <div class="form-group">
+            <label for="customEnd">End Year:</label>
+            <input type="date" id="customEnd" value="2023-12-31" class="styled-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="customThreshold">Flood Threshold Percentile:</label>
+          <select id="customThreshold" class="styled-select">
+            <option value="0.85">85th Percentile (Sensitive Early Warning)</option>
+            <option value="0.90" selected>90th Percentile (Standard Project Threshold)</option>
+            <option value="0.95">95th Percentile (Severe Floods Only)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnApplyCustomCoords" class="btn-primary-action">
+          <i class="fa-solid fa-cloud-arrow-down"></i> Fetch & Train Model
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Footer -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <span>Project 2: Himalayan Flood Prediction • Real-World Hydrometeorology & Transparent Cryosphere Limitations</span>
+      <span class="data-credit">Data sources: ECMWF GloFAS Flood API & ERA5 Historical Weather via Open-Meteo</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
