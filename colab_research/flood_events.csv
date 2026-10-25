@@ -1,0 +1,7 @@
+name,date,lat,lon,type,source_to_check,status
+Kosi River flood (Bihar/Nepal border),2008-08-18,26.6,86.9,embankment breach,EM-DAT or news archive,CHECK DATE AND LOCATION
+Kedarnath / Mandakini flood (Uttarakhand),2013-06-16,30.73,79.07,cloudburst and lake breach,EM-DAT or news archive,CHECK DATE AND LOCATION
+Chamoli / Rishiganga flood (Uttarakhand),2021-02-07,30.4,79.7,rock-ice avalanche and flood,EM-DAT or news archive,CHECK DATE AND LOCATION
+Lhonak lake outburst, North Sikkim (Teesta),2023-10-04,27.8,88.4,glacial lake outburst (GLOF),EM-DAT or news archive,CHECK DATE AND LOCATION
+Nepal-China border glacier collapse flood (Rasuwa/Nuwakot),2026-08-26,28.2,85.4,glacier collapse flood,AFP / AP news (Aug 2026),CONFIRMED BY NEWS - coordinates approximate
+Budhi Gandaki flash flood (Gorkha),2026-10-11,28.05,84.9,landslide dam breach,AFP / Ground News (Oct 2026),CONFIRMED BY NEWS - coordinates approximate
