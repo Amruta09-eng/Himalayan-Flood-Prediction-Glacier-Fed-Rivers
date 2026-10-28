@@ -5,6 +5,9 @@
 [![ML](https://img.shields.io/badge/ML-Scikit--Learn-orange?logo=scikit-learn)](https://scikit-learn.org/)
 [![Data](https://img.shields.io/badge/Data-GloFAS%20%26%20ERA5-4b9cd3)](https://open-meteo.com)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?logo=render)](https://himalayan-flood-prediction-glacier-fed-dyvg.onrender.com/)
+
+> 🌐 **Live App:** [himalayan-flood-prediction-glacier-fed-dyvg.onrender.com](https://himalayan-flood-prediction-glacier-fed-dyvg.onrender.com/)
 
 > **HimAlert AI** — An end-to-end predictive early warning platform for high-altitude cryospheric river basins across the Himalayas. Built with real hydrometeorological data from Open-Meteo GloFAS v4 river discharge and ERA5 reanalysis.
 
