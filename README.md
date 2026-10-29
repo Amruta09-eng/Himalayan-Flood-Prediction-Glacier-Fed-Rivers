@@ -5,23 +5,27 @@
 [![ML](https://img.shields.io/badge/ML-Scikit--Learn-orange?logo=scikit-learn)](https://scikit-learn.org/)
 [![Data](https://img.shields.io/badge/Data-GloFAS%20%26%20ERA5-4b9cd3)](https://open-meteo.com)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?logo=render)](https://himalayan-flood-prediction-glacier-fed-dyvg.onrender.com/)
+[![Website](https://img.shields.io/badge/Website-Visit-46E3B7?logo=googlechrome)](https://himalayan-flood-prediction-glacier-fed-rivers.ai.studio/)
 
-> 🌐 **Live App:** [himalayan-flood-prediction-glacier-fed-dyvg.onrender.com](https://himalayan-flood-prediction-glacier-fed-dyvg.onrender.com/)
+> 🌐 **Website:** [HimAlert AI — Himalayan Flood Prediction & Glacier-Fed Rivers](https://himalayan-flood-prediction-glacier-fed-rivers.ai.studio/)
 
-> **HimAlert AI** — An end-to-end predictive early warning platform for high-altitude cryospheric river basins across the Himalayas. Built with real hydrometeorological data from Open-Meteo GloFAS v4 river discharge and ERA5 reanalysis.
+> 💻 **GitHub Repository:** [Himalayan Flood Prediction & Glacier-Fed Rivers](https://github.com/Amruta09-eng/Himalayan-Flood-Prediction-Glacier-Fed-Rivers)
+
+**HimAlert AI** is an early-warning and flood-risk awareness platform for high-altitude, glacier-fed river basins across the Himalayas. The project explores hydrometeorological data, machine learning, river-flow forecasting, and flood-risk scenarios to support better understanding of potential flood hazards.
 
 ---
 
 ## 🌊 Project Overview
 
-Himalayan floods are uniquely driven by three mechanisms that standard lowland flood models miss:
+Himalayan floods can result from several interacting hazards that require specialised monitoring and analysis.
 
 | Mechanism | Description |
 |---|---|
-| 🧊 **GLOF** | Glacial Lake Outburst Floods — sudden moraine dam failures |
-| ⛈️ **Monsoon Cloudbursts** | Extreme convective storms dropping >100mm in <2 hours |
-| ☀️ **Thermal Ablation** | Degree-day heating causing rapid snow & ice melt surges |
+| 🧊 **GLOF** | Glacial Lake Outburst Floods caused by sudden releases of water from glacial lakes |
+| ⛈️ **Monsoon Cloudbursts** | Intense rainfall that can trigger flash floods and landslides |
+| ☀️ **Thermal Ablation** | Snow and ice melt that can contribute to increased river discharge |
+
+The project is inspired by devastating flood events in the Himalayan region, including disasters in Nepal, and aims to improve flood-risk awareness through an interactive website.
 
 ---
 
@@ -31,104 +35,106 @@ Himalayan floods are uniquely driven by three mechanisms that standard lowland f
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Launch the full application (backend + opens browser automatically)
+# 2. Launch the application
 python main.py
 ```
 
-Visit **http://127.0.0.1:8000** — the interactive dashboard loads automatically.
+Visit **http://127.0.0.1:8000** to access the locally running website, assuming the backend starts successfully on that address.
 
 ---
 
 ## 🗂️ Project Structure
 
-```
+```text
 Himalayan-Flood-Prediction-Glacier-Fed-Rivers/
 │
 ├── backend/                         # FastAPI backend
-│   ├── app.py                       # REST API routes & frontend serving
-│   ├── data_manager.py              # GloFAS + ERA5 data fetching & caching
-│   ├── ml_engine.py                 # Feature engineering & ML models
-│   ├── backtesting.py               # Forensic backtesting on historic disasters
-│   ├── simulator.py                 # What-If climate surge simulator
-│   └── scientific_report.py        # Academic research documentation
+│   ├── app.py                       # REST API routes and frontend serving
+│   ├── data_manager.py              # Data fetching and caching
+│   ├── ml_engine.py                 # Feature engineering and ML models
+│   ├── backtesting.py               # Historical event backtesting
+│   ├── simulator.py                 # What-If climate simulator
+│   └── scientific_report.py         # Research documentation
 │
-├── frontend/                        # Interactive web dashboard
-│   ├── index.html                   # Main SPA entry point
-│   ├── css/style.css                # Custom design system (dark/light themes)
-│   └── js/app.js                    # Dashboard logic, charts, maps
+├── frontend/                        # Interactive website
+│   ├── index.html                   # Main website entry point
+│   ├── css/style.css                # Styling and themes
+│   └── js/app.js                    # Dashboard logic, charts, and maps
 │
-├── colab_research/                  # Google Colab research notebooks
-│   ├── fetch_and_model.py           # Base ML model (run in Colab)
-│   ├── events_test.py               # Flood event backtesting script
-│   ├── flood_events.csv             # Verified Himalayan flood event dataset
-│   └── README.md                    # Colab usage guide
+├── colab_research/                  # Research scripts and notebooks
+│   ├── fetch_and_model.py           # Base ML model
+│   ├── events_test.py               # Flood event backtesting
+│   ├── flood_events.csv             # Historical event dataset
+│   └── README.md                    # Research usage guide
 │
-├── data_cache/                      # Local CSV cache (auto-generated)
-├── main.py                          # One-command app launcher
+├── data_cache/                      # Local data cache
+├── main.py                          # Application launcher
 ├── requirements.txt                 # Python dependencies
-└── RUN_GUIDE.md                     # Detailed run guide & architecture docs
+└── RUN_GUIDE.md                     # Setup and architecture guide
 ```
 
 ---
 
-## 🔬 ML Pipeline
+## 🔬 Machine Learning Pipeline
 
-- **Data**: Daily GloFAS river discharge + ERA5 cryospheric weather variables
-- **Features**: Lag flows (Q_t, Q_t-1, Q_t-2, Q_t-3), 3-day & 7-day antecedent precipitation, degree-day melt energy, 30-day warming anomaly, monsoon harmonic encoding
-- **Models**: Persistence Baseline → Random Forest Regressor → Random Forest Classifier → Gradient Boosting
-- **Evaluation**: MAE, RMSE, R², Precision, Recall, F1, False Alarm Ratio (FAR), Critical Success Index (CSI)
-- **Split**: Strict chronological train/test — **zero data leakage**
+- **Data:** River-discharge and meteorological data, subject to source availability.
+- **Features:** Lagged river flows, antecedent precipitation, degree-day melt estimates, warming anomalies, and monsoon-related features.
+- **Models:** Persistence baseline, Random Forest regression and classification, and Gradient Boosting.
+- **Evaluation:** MAE, RMSE, R², precision, recall, F1-score, False Alarm Ratio (FAR), and Critical Success Index (CSI).
+- **Validation:** Chronological train/test splitting to help prevent temporal data leakage.
 
 ---
 
 ## 🗺️ Pre-Configured Himalayan Monitoring Stations
 
-| Station | River / Region | Hazard Type |
+| Station | River / Region | Relevant Hazard |
 |---|---|---|
-| 🇳🇵 **Imja Glacial Lake** | Dudh Koshi, Everest Nepal | Moraine-dammed GLOF |
-| 🇮🇳 **Kedarnath** | Mandakini, Uttarakhand | Cloudburst + Chorabari Breach |
-| 🇮🇳 **Chamoli** | Rishiganga, Uttarakhand | Rock-Ice Avalanche |
-| 🇮🇳 **South Lhonak** | Teesta, Sikkim | Glacial Lake Outburst |
-| 🇮🇳 **Kinnaur / Sutlej** | Upper Sutlej, Himachal Pradesh | Glacial Melt + Cloudburst |
-| 🇮🇳 **Kosi Basin** | Kosi, Bihar / Nepal Border | River Avulsion & Silt Overload |
+| 🇳🇵 **Imja Glacial Lake** | Dudh Koshi, Everest, Nepal | Potential glacial lake outburst flood |
+| 🇮🇳 **Kedarnath** | Mandakini, Uttarakhand | Extreme rainfall and flash-flood hazards |
+| 🇮🇳 **Chamoli** | Rishiganga, Uttarakhand | Flood and landslide-related hazards |
+| 🇮🇳 **South Lhonak** | Teesta basin, Sikkim | Glacial lake outburst flood |
+| 🇮🇳 **Kinnaur / Sutlej** | Upper Sutlej, Himachal Pradesh | Glacier melt and extreme rainfall |
+| 🇮🇳 **Kosi Basin** | Kosi basin, Nepal and India | River flooding and sediment-related hazards |
 
 ---
 
-## 🌐 Dashboard Features
+## 🌐 Website Features
 
-- 📡 **Telemetry Hub** — Real-time gauge metrics: flow, 24h forecast, alert tier, exceedance probability, degree-day melt index
-- 🗺️ **GIS Map** — Interactive Leaflet map of high-risk glacial lakes & river basins
-- 📈 **Hydrographs** — Actual vs. Predicted flow with 90th percentile threshold & rainfall overlay
-- 🤖 **Model Benchmarks** — Comparison table with confusion matrix & feature importance chart
-- 🔭 **What-If Simulator** — Real-time ΔT warming, cloudburst mm, antecedent moisture sliders with source partitioning
-- 🕰️ **Historical Backtesting** — Forensic cards for 2013 Kedarnath, 2021 Chamoli, 2023 Lhonak, 2008 Kosi disasters
-- 📄 **Scientific Report** — Full academic paper format with model limitations
+- 📡 **Telemetry Dashboard** — Displays river-flow information, forecast indicators, and risk metrics where data is available.
+- 🗺️ **Interactive GIS Map** — Visualises relevant glacial lakes, river basins, and monitoring locations.
+- 📈 **Hydrographs** — Presents observed and predicted river-flow trends where supported by the data pipeline.
+- 🤖 **Model Evaluation** — Displays model comparisons and performance metrics where implemented.
+- 🔭 **What-If Simulator** — Explores how changes in temperature, rainfall, and antecedent moisture may affect simulated flood risk.
+- 🕰️ **Historical Disaster Analysis** — Examines selected historical Himalayan flood events.
+- 📄 **Scientific Report** — Documents the modelling approach, assumptions, and limitations.
 
 ---
 
-## ⚠️ Model Limitations (Honest Appraisal)
+## ⚠️ Model Limitations
 
-1. **~5 km Grid Resolution** — GloFAS averages steep gorges into grid cells
-2. **GLOF Geotechnical Blindspot** — Moraine failures need structural monitoring, not just weather models
-3. **Extreme Event Sparsity** — Catastrophic floods occur once every 5–10 years
-4. **ERA5 Cloudburst Smoothing** — 1–3 km convective storms underestimated in reanalysis
-5. **No Dynamic Lake Bathymetry** — Lacks daily satellite glacial lake volume tracking
-6. **24h Aggregation** — Daily GloFAS averages dampen GLOF wave peaks (30–90 min events)
-7. **Sediment Bulking** — Up to 50% sediment by volume causes avulsion at sub-peak discharge
+1. **Spatial Resolution:** Gridded hydrological data may not capture local conditions in steep Himalayan valleys.
+2. **GLOF Detection:** Weather and river-flow models alone cannot reliably predict glacial lake dam failure without additional monitoring.
+3. **Rare Extreme Events:** Limited historical examples of catastrophic floods can make model validation difficult.
+4. **Extreme Rainfall:** Gridded weather datasets may smooth localised cloudbursts.
+5. **Lake Monitoring:** Dynamic lake volume and moraine stability require additional observations.
+6. **Temporal Resolution:** Daily discharge data may not capture short-lived flood waves.
+7. **Sediment Effects:** Sediment transport can alter flood impacts and river channels in ways that simple models may not represent.
 
 ---
 
 ## 📡 API Endpoints
 
+The following endpoints describe the intended backend interface; confirm their availability against the actual implementation.
+
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/health` | System health check |
-| GET | `/api/stations` | List all monitoring stations |
-| GET | `/api/forecast?station_id=imja` | Run ML forecast for a station |
-| GET | `/api/events` | Historical disaster backtests |
-| POST | `/api/simulate` | Run What-If climate simulation |
-| GET | `/api/report` | Get full scientific report |
-| POST | `/api/predict` | Live prediction with custom inputs |
+| GET | `/api/stations` | List monitoring stations |
+| GET | `/api/forecast?station_id=imja` | Retrieve a station forecast |
+| GET | `/api/events` | Retrieve historical event information |
+| POST | `/api/simulate` | Run a What-If simulation |
+| GET | `/api/report` | Retrieve the scientific report |
+| POST | `/api/predict` | Generate a prediction from supplied inputs |
 
 ---
 
@@ -136,12 +142,13 @@ Himalayan-Flood-Prediction-Glacier-Fed-Rivers/
 
 | Layer | Technology |
 |---|---|
-| Backend | Python 3.10+, FastAPI, Uvicorn |
-| ML | Scikit-Learn (Random Forest, Gradient Boosting) |
-| Data | Open-Meteo GloFAS v4, ERA5 Reanalysis |
-| Frontend | HTML5, Vanilla CSS, JavaScript, Chart.js, Leaflet.js |
-| Maps | Leaflet.js with OSM tiles |
-| Fonts | Inter, Outfit, JetBrains Mono (Google Fonts) |
+| Backend | Python, FastAPI, Uvicorn |
+| Machine Learning | Scikit-learn |
+| Hydrometeorological Data | Open-Meteo / GloFAS and ERA5, where configured |
+| Frontend | HTML5, CSS3, JavaScript |
+| Charts | Chart.js |
+| Maps | Leaflet.js and OpenStreetMap tiles |
+| Fonts | Inter, Outfit, JetBrains Mono |
 
 ---
 
@@ -156,3 +163,10 @@ MIT License — see [LICENSE](LICENSE) for details.
 **Amruta M Patil** — [@Amruta09-eng](https://github.com/Amruta09-eng)
 
 > *"The Himalayas don't flood like lowland rivers. This system is built for that difference."*
+
+---
+
+## 🔗 Project Links
+
+- 🌐 **Website:** [Visit HimAlert AI](https://himalayan-flood-prediction-glacier-fed-rivers.ai.studio/)
+- 💻 **Source Code:** [GitHub Repository](https://github.com/Amruta09-eng/Himalayan-Flood-Prediction-Glacier-Fed-Rivers)
